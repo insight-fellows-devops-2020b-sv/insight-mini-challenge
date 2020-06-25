@@ -1,0 +1,5 @@
+**~
+.ansible-roles/
+*.retry
+Dockerfile.*
+requirements.yml

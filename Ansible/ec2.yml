@@ -1,0 +1,8 @@
+---
+   - name: install and configure Prometheus
+     hosts: mini_challenge_1
+     become: yes
+   
+     roles:
+        - cloudalchemy.prometheus
+        - andrewrothstein.r
