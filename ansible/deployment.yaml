@@ -1,0 +1,73 @@
+- hosts: localhost
+  gather_facts: True
+  check_mode: no
+  tasks:
+# Work around to automatically add new hosts to known_hosts
+  - name: run ssh-keyscan to add keys to known_hosts
+    local_action: shell ssh-keyscan "{{ host }}" >> ~/.ssh/known_hosts
+  - name: Add public ip addresses to an dynamic inventory
+    add_host:
+      name: "{{ host }}"
+      groups: all
+# wait_for task to run as local_action wait for remote server to be ssh-able
+
+  - local_action: wait_for port=22 host="{{ host }}" search_regex=OpenSSH delay=10
+
+
+
+- hosts: all
+  vars:
+     ansible_python_interpreter: "/usr/bin/python"
+     ANSIBLE_HOST_KEY_CHECKING: "False"
+  gather_facts: no
+  sudo: yes
+  check_mode: no
+  tasks:
+# Synchronize prometheus and docker configuration to remote host
+  - name: Upload docker-compose files
+    synchronize:
+      src: ../../prometheus-docker
+      dest: /var/tmp/
+# Install requirements for docker_service module
+  - name: apt-get clean
+    shell: apt-get clean
+    become: true
+    become_user: root
+
+  - name: apt-get update
+    shell: apt-get update
+    become: true
+    become_user: root
+
+  - name: Install
+    apt:
+      name: docker
+      state: latest
+
+  - name: Install
+    apt:
+      name: python-pip
+
+  - name: Install docker-compose
+    pip: name=docker-compose
+    become: true
+
+  - name: ensure repository key is installed
+    apt_key:
+      id: "58118E89F3A912897C070ADBF76221572C52609D"
+      keyserver: "hkp://p80.pool.sks-keyservers.net:80"
+      state: present
+
+  - name: ensure docker registry is available
+  # For Ubuntu 14.04 LTS, use this repository:
+    apt_repository: repo='deb https://apt.dockerproject.org/repo ubuntu-trusty main' state=present
+
+  - name: ensure docker and dependencies are installed
+    apt: name=docker-engine update_cache=yes
+
+  - service: name=docker state=restarted
+
+# Run docker-compose yaml
+  - docker_service:
+      project_src: /var/tmp/prometheus-docker
+      state: present

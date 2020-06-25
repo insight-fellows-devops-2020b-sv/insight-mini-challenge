@@ -93,4 +93,14 @@ resource "aws_instance" "this" {
   # credit_specification {
   #   cpu_credits = local.is_t_instance_type ? var.cpu_credits : null
   # }
+
 }
+
+# Using terraform module to run ansible playbooks
+# module "ansible_provisioner" {
+#    source    = "github.com/cloudposse/tf_ansible"
+#    arguments = ["--user=ubuntu --private-key=/tmp/deploy_user.pem"]
+#    envs      = ["host=${aws_instance.this.*.public_ip}"]
+#    playbook  = "./ansible/deployment.yml"
+#    dry_run   = false
+# }

@@ -173,3 +173,25 @@ module "ec2" {
 #   subnet_id              = tolist(data.aws_subnet_ids.all.ids)[0]
 #   vpc_security_group_ids = [module.security_group.this_security_group_id]
 # }
+
+resource "aws_instance" "web" {
+  instance_type = "t2.micro"
+  # count = "1"
+  ami = "ami-04e59c05167ea7bd5"
+  key_name = var.key_name
+  # vpc_security_group_ids = ["${aws_security_group.default.id}"]
+  # subnet_id = "${var.subnet_id}"
+  # associate_public_ip_address = true
+  # tags {
+  #       Name = "wp-demo-${var.APP_NAME}-${var.USER_NAME}"
+  #   }
+}
+
+# Using terraform module to run ansible playbooks
+module "ansible_provisioner" {
+   source    = "github.com/cloudposse/tf_ansible"
+   arguments = ["--user=ubuntu --private-key=SOME_KEY_PAIR.pem"]
+   envs      = ["host=${aws_instance.web.public_ip}"]
+   playbook  = "../../ansible/deployment.yml"
+   dry_run   = false
+}
