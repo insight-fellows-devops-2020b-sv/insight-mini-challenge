@@ -42,7 +42,7 @@ resource "aws_instance" "this" {
   vpc_security_group_ids = [aws_security_group.this.id]
 
   tags = {
-    Name = "lesson-2"
+    Name = "Ansible_Project"
   }
 }
 
